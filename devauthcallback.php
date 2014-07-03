@@ -29,6 +29,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
     curl_setopt($ch, CURLOPT_POST, count($fields));
     curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
     $result = curl_exec($ch);
 
     if ($result===false) {
@@ -45,6 +47,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
     curl_setopt($ch, CURLOPT_URL, $verify_url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array($header));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
     $result = curl_exec($ch);
     if ($result===false) {
         auth_error(curl_error($ch));
@@ -86,6 +90,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         $lookup_url="https://api.eveonline.com/eve/CharacterAffiliation.xml.aspx?ids=".$response->CharacterID;
         curl_setopt($ch, CURLOPT_URL, $lookup_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         $result = curl_exec($ch);
         curl_close($ch);
         if ($result===false) {
@@ -114,6 +120,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $alliance_url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
                 $result = curl_exec($ch);
                 curl_close($ch);
                 $alliance_data=json_decode($result);
@@ -150,6 +158,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $corporation_url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             $result = curl_exec($ch);
             curl_close($ch);
             $corpxml=simplexml_load_string($result);
