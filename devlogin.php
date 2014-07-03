@@ -10,7 +10,16 @@ if (isset($_SESSION['auth_characterid'])) {
     $client_id='3rdparty_fuzzwork';
     $redirect_uri="https://www.fuzzwork.co.uk/auth/devauthcallback.php";
     $state=uniqid();
-    $redirect_to="https://www.fuzzwork.co.uk/auth/whoami.php";
+
+    $redirecturl=$_SERVER['HTTP_REFERER'];
+    
+    if (!preg_match("#^https://www.fuzzwork.co.uk/(.*)$#", $redirecturl, $matches)) {
+        $redirecturl='/';
+    } else {
+        $redirecturl=$matches[1];
+    }
+
+    $redirect_to="https://www.fuzzwork.co.uk/".$redirecturl;
     $_SESSION['auth_state']=$state;
     $_SESSION['auth_redirect']=$redirect_to;
     session_write_close();
