@@ -1,12 +1,16 @@
 eve-sso-auth
 ============
 
-Basic PHP code for setting up a session and database entry for usersy
+Basic PHP code for setting up a session and database entry for users
 
 requires a database and the CURL extension.
 
 Right now, it makes the assumption that people don't change which alliance/corporation they're in. Long term I'll change that, so it checks every time. Kind of requires a fix-this cronjob for the moment
 
+
+You'll need to have a file called secret.php, for the $clientid and $secret.
+
+Please change the $useragent in the authcallback.
 
     CREATE TABLE `alliance` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
