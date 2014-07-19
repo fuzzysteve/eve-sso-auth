@@ -3,6 +3,7 @@ require_once('auth_functions.php');
 require_once('secret.php');
 session_start();
 
+$useragent="Fuzzwork Auth agent.";
 
 // Make sure that the secret matches the one set before the redirect.
 if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth_state']==$_GET['state']) {
@@ -25,6 +26,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
     rtrim($fields_string, '&');
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array($header));
     curl_setopt($ch, CURLOPT_POST, count($fields));
     curl_setopt($ch, CURLOPT_POSTFIELDS, $fields_string);
@@ -45,6 +47,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
 
     $header='Authorization: Bearer '.$auth_token;
     curl_setopt($ch, CURLOPT_URL, $verify_url);
+    curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array($header));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -79,6 +82,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
 
     while ($row = $stmt->fetchObject()) {
         $userdetails=$row;
+        $userid=$row->id;
     }
 
 // Fill in character details, if they're not in the DB
@@ -89,6 +93,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         $ch = curl_init();
         $lookup_url="https://api.eveonline.com/eve/CharacterAffiliation.xml.aspx?ids=".$response->CharacterID;
         curl_setopt($ch, CURLOPT_URL, $lookup_url);
+        curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
@@ -120,6 +125,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $alliance_url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
                 $result = curl_exec($ch);
@@ -157,6 +163,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
             $corporation_url="https://api.eveonline.com/corp/CorporationSheet.xml.aspx?corporationid=".$corporationID;
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $corporation_url);
+            curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
@@ -194,11 +201,11 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         $userid=$dbh->lastInsertId();
         $userdetails['id']=$userid;
 
-
         error_log("user added to db");
     }
 
     $_SESSION['auth_characterid']=$response->CharacterID;
+    $_SESSION['auth_id']=$userid;
     $_SESSION['auth_charactername']=$response->CharacterName;
     $_SESSION['auth_userdetails']=json_encode($userdetails);
     $_SESSION['auth_characterhash']=$response->CharacterOwnerHash;
