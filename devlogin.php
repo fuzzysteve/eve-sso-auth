@@ -8,7 +8,7 @@ if (isset($_SESSION['auth_characterid'])) {
     $authsite='https://sisilogin.testeveonline.com';
     $authurl='/oauth/authorize';
     $client_id='3rdparty_fuzzwork';
-    $redirect_uri="https://www.fuzzwork.co.uk/auth/devauthcallback.php";
+    $redirect_uri="https%3A%2F%2Fwww.fuzzwork.co.uk%2Fauth%2Fdevauthcallback.php";
     $state=uniqid();
 
     $redirecturl=$_SERVER['HTTP_REFERER'];
