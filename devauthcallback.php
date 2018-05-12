@@ -12,8 +12,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
 
 
     //Do the initial check.
-    $url='https://sisilogin.testeveonline.com/oauth/token';
-    $verify_url='https://sisilogin.testeveonline.com/oauth/verify';
+    $url='https://login.eveonline.com/oauth/token';
+    $verify_url='https://login.eveonline.com/oauth/verify';
     $header='Authorization: Basic '.base64_encode($clientid.':'.$secret);
     $fields_string='';
     $fields=array(
@@ -91,7 +91,7 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         // No database entry for the user. lookup time.
         error_log('Creating user details');
         $ch = curl_init();
-        $lookup_url="https://api.eveonline.com/eve/CharacterAffiliation.xml.aspx?ids=".$response->CharacterID;
+        $lookup_url="https://esi.evetech.net/latest/characters/".$response->CharacterID."/";
         curl_setopt($ch, CURLOPT_URL, $lookup_url);
         curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -102,26 +102,21 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         if ($result===false) {
             auth_error('No such character on the API');
         }
-        $xml=simplexml_load_string($result);
-        if (isset($xml->result->rowset->row->attributes()["characterID"])) {
-            $corporationID=(string)$xml->result->rowset->row->attributes()["corporationID"];
-            $corporationName=(string)$xml->result->rowset->row->attributes()["corporationName"];
-            $allianceID=(string)$xml->result->rowset->row->attributes()["allianceID"];
-            $allianceName=(string)$xml->result->rowset->row->attributes()["allianceName"];
-        } else {
-            auth_error("No character details returned from API");
-        }
+        $chardetails=json_decode($result);
+        $corporationID=$chardetails->corporation_id;
+        $allianceID=$chardetails->alliance_id;
         //Alliance
         if ($allianceID!=0) {
-            $alliancesql='select allianceid,allianceticker from alliance where allianceid=:allianceid';
+            $alliancesql='select allianceid,allianceticker,alliancename from alliance where allianceid=:allianceid';
             $stmt = $dbh->prepare($alliancesql);
             $stmt->execute(array(':allianceid'=>$allianceID));
             while ($row = $stmt->fetchObject()) {
                 $allianceticker=$row->allianceticker;
+                $allianceName=$row->alliancename;
             }
             if (!isset($allianceticker)) {
                 error_log('Getting alliance details');
-                $alliance_url='http://public-crest.eveonline.com/alliances/'.$allianceID.'/';
+                $alliance_url='https://esi.evetech.net/latest/alliances/'.$allianceID.'/';
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $alliance_url);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -131,7 +126,8 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
                 $result = curl_exec($ch);
                 curl_close($ch);
                 $alliance_data=json_decode($result);
-                $allianceticker=$alliance_data->shortName;
+                $allianceticker=$alliance_data->ticker;
+                $allianceName=$alliance_data->name;
                 $alliance_insert_sql="insert into alliance (allianceid,alliancename,allianceticker) 
                     values (:allianceid,:alliancename,:allianceticker)";
                 $stmt = $dbh->prepare($alliance_insert_sql);
@@ -152,15 +148,16 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
         $userdetails['allianceticker']=$allianceticker;
 
         // Corporation
-        $corporationsql='select corporationid,corporationticker from corporation where corporationid=:corporationid';
+        $corporationsql='select corporationid,corporationticker,corporationname from corporation where corporationid=:corporationid';
         $stmt = $dbh->prepare($corporationsql);
         $stmt->execute(array(':corporationid'=>$corporationID));
         while ($row = $stmt->fetchObject()) {
             $corporationticker=$row->corporationid;
+            $corporationName=$row->corporationname;
         }
         if (!isset($corporationticker)) {
             error_log('Getting corporation details');
-            $corporation_url="https://api.eveonline.com/corp/CorporationSheet.xml.aspx?corporationid=".$corporationID;
+            $corporation_url="https://esi.evetech.net/latest/corporations/".$corporationID."/";
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $corporation_url);
             curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
@@ -169,8 +166,9 @@ if (isset($_SESSION['auth_state']) and isset($_GET['state']) and $_SESSION['auth
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             $result = curl_exec($ch);
             curl_close($ch);
-            $corpxml=simplexml_load_string($result);
-            $corporationticker=$corpxml->result->ticker;
+            $corpjson=json_decode($result);
+            $corporationticker=$corpjson->ticker;
+            $corporationName=$corpjson->name;
             $corporation_insert_sql="insert into corporation
                 (corporationid,corporationname,corporationticker,allianceid)
                 values (:corporationid,:corporationname,:corporationticker,:allianceid)";
