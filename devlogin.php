@@ -5,8 +5,8 @@ if (isset($_SESSION['auth_characterid'])) {
     exit;
 } else {
     //Throw login redirect.
-    $authsite='https://sisilogin.testeveonline.com';
-    $authurl='/oauth/authorize';
+    $authsite='https://login.eveonline.com';
+    $authurl='/oauth2/authorize';
     $client_id='3rdparty_fuzzwork';
     $redirect_uri="https%3A%2F%2Fwww.fuzzwork.co.uk%2Fauth%2Fdevauthcallback.php";
     $state=uniqid();
